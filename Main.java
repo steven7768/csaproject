@@ -1,3 +1,10 @@
+// Parker Comments: 
+//  Lookin good brah, didnt find any errors
+//  Inputs have failsafe
+//  All functions correct
+
+// looks good no errors - soha
+
 import java.util.Scanner;
 
 // food truck sim - main game
