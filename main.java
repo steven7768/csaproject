@@ -1,10 +1,12 @@
 import java.util.Scanner;
 
+// food truck sim - main game
 public class Main {
 
-    public static final int MAX_DAYS = 3;   // TESTING put back to 7 later...
+    // game settings - tweak these for balance
+    public static final int MAX_DAYS = 7;
     public static final int HOURS_PER_SHIFT = 8;
-    public static final int OPENING_HOUR = 11;  
+    public static final int OPENING_HOUR = 11;// 11am (24hr)
     public static final double GOAL_MONEY = 1000.00;
     public static final double DAILY_PERMIT_FEE = 15.00;
     public static final double FAIR_PRICE = 8.00;
@@ -53,7 +55,7 @@ public class Main {
             if (truckName.length() == 0) {
                 truckName = FoodTruck.DEFAULT_NAME;
             }
-            truck = new FoodTruck(truckName, startingMoney);   // constructor 3
+            truck = new FoodTruck(truckName, startingMoney);// constructor 3
         }
 
         System.out.println();
@@ -80,7 +82,7 @@ public class Main {
                 } else if (choice == 2) {
                     setPrice(input, truck);
                 } else if (choice == 3) {
-                    // can't open with nothing to sell
+                    // can't open with nothing to sell :(
                     if (truck.getIngredients() == 0) {
                         System.out.println("  Your fridge is empty! Buy some kits first.");
                     } else {
@@ -93,9 +95,17 @@ public class Main {
 
             if (opened) {
                 runShift(truck, weather);
+                boolean paidPermit = endOfDay(truck);
 
-                // TEMP so it ends, real endings + money stuff later
-                if (day >= MAX_DAYS) {
+                // order matters! lose > win > out of days
+                if (!paidPermit || truck.isBankrupt()) {
+                    System.out.println(truck.getName() + " is out of business!");
+                    gameOver = true;
+                } else if (truck.getMoney() >= GOAL_MONEY) {
+                    System.out.printf("YOU WIN! You hit $%.2f on day %d.%n", truck.getMoney(), day);
+                    gameOver = true;
+                } else if (day >= MAX_DAYS) {
+                    System.out.println("The season is over!");
                     gameOver = true;
                 } else {
                     day++;
@@ -103,7 +113,7 @@ public class Main {
             }
         }
 
-        System.out.println("Game over.");   // temp, real report later
+        printFinalReport(truck, day);
         input.close();
     }
 
@@ -170,7 +180,7 @@ public class Main {
                 break;
             }
 
-            // downpour -> skip this hour
+            // downpour- skip this hour
             if (weather.equals("Rainy") && Math.random() < DOWNPOUR_CHANCE) {
                 System.out.println("  " + clockHour + ":00   downpour, nobody came by");
                 continue;
@@ -220,8 +230,10 @@ public class Main {
             customers *= 2.0;
         }
 
-        // cheaper = more people, pricier = fewer
-        customers *= FAIR_PRICE / truck.getMealPrice();
+        // squared so high prices actually hurt
+        // (plain ratio = same revenue at any price)
+        double priceRatio = FAIR_PRICE / truck.getMealPrice();
+        customers *= priceRatio * priceRatio;
 
         // 3 stars = normal crowd
         customers *= truck.getReputation() / 3.0;
@@ -230,6 +242,45 @@ public class Main {
         customers *= 0.8 + Math.random() * 0.4;
 
         return (int) Math.round(customers);
+    }
+
+    // false = couldn't pay permit
+    public static boolean endOfDay(FoodTruck truck) {
+        int spoiled = truck.spoilIngredients(SPOIL_RATE);
+
+        if (spoiled > 0) {
+            System.out.println(spoiled + " leftover kit(s) spoiled overnight.");
+        }
+
+        if (truck.canAfford(DAILY_PERMIT_FEE)) {
+            truck.payExpense(DAILY_PERMIT_FEE);
+            System.out.printf("Paid the $%.2f permit. Cash: $%.2f%n", DAILY_PERMIT_FEE, truck.getMoney());
+            return true;
+        }
+
+        System.out.printf("You can't afford the $%.2f permit!%n", DAILY_PERMIT_FEE);
+        return false;
+    }
+
+    public static void printFinalReport(FoodTruck truck, int daysPlayed) {
+        double profit = truck.getProfit();
+
+        System.out.println();
+        System.out.println("===== FINAL REPORT =====");
+        System.out.printf("%-14s %s%n", "Truck:", truck.getName());
+        System.out.printf("%-14s %d%n", "Days:", daysPlayed);
+        System.out.printf("%-14s %d%n", "Meals sold:", truck.getTotalMealsSold());
+        System.out.printf("%-14s $%.2f%n", "Cash:", truck.getMoney());
+        System.out.printf("%-14s $%.2f%n", "Profit:", profit);
+
+        // grade
+        if (truck.getMoney() >= GOAL_MONEY) {
+            System.out.println("Grade: A+   food truck legend");
+        } else if (profit > 0) {
+            System.out.println("Grade: B    you made money");
+        } else {
+            System.out.println("Grade: F    better luck next season");
+        }
     }
 
     // 50% sunny, 30% cloudy, 20% rain
@@ -245,7 +296,6 @@ public class Main {
         }
     }
 
-    // keeps asking till it gets a valid int
     public static int getIntInRange(Scanner input, String prompt, int min, int max) {
         int value = 0;
         boolean valid = false;
