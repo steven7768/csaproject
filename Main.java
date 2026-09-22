@@ -5,6 +5,8 @@
 
 // looks good no errors - soha
 
+// third guy - good 👍
+
 import java.util.Scanner;
 
 // food truck sim - main game
