@@ -4,7 +4,7 @@ public class FoodTruck {
     public static final String DEFAULT_NAME = "The Rolling Taco";
     public static final double DEFAULT_MONEY = 100.00;
     public static final double INGREDIENT_COST = 2.50;   // per kit
-    public static final int FRIDGE_CAPACITY = 100;  // fridge size
+    public static final int FRIDGE_CAPACITY = 100;       // fridge size
     public static final double MIN_REPUTATION = 1.0;
     public static final double MAX_REPUTATION = 5.0;
 
@@ -33,9 +33,9 @@ public class FoodTruck {
         this.name = name;
         this.money = startingMoney;
         this.startingMoney = startingMoney;
-        this.ingredients = 0;    // empty fridge
-        this.mealPrice = 8.00;  // fair price to start
-        this.reputation = 3.0;  // start at 3 stars
+        this.ingredients = 0;       // empty fridge
+        this.mealPrice = 8.00;      // fair price to start
+        this.reputation = 3.0;      // start at 3 stars
         this.totalMealsSold = 0;
         this.totalRevenue = 0.0;
     }
@@ -66,7 +66,7 @@ public class FoodTruck {
     }
 
     // setters
-    // no setMoney on purpose, money only changes via buy/sell/bills
+    // no setMoney on purpose, money only changes thru buy/sell/bills
 
     // no free/negative food
     public void setMealPrice(double newPrice) {
@@ -107,6 +107,7 @@ public class FoodTruck {
     // returns how many actually sold
     public int sellMeals(int customers) {
         // can't sell more than we have
+        // (fixed)
         int mealsSold = Math.min(customers, ingredients);
 
         double earnings = mealsSold * mealPrice;
@@ -120,6 +121,7 @@ public class FoodTruck {
     }
 
     public int spoilIngredients(double spoilRate) {
+        // cast cuts the decimal, 1.75 -> 1
         int spoiled = (int) (ingredients * spoilRate);
         ingredients -= spoiled;
         return spoiled;
